@@ -9,13 +9,21 @@ export default function AuthModal() {
   const { showAuthModal, setShowAuthModal } = useApp();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+      setShowAuthModal(false);
+    } catch (error: any) {
       console.error("Auth error:", error);
+      if (error.code === "auth/configuration-not-found") {
+        setError("Google Sign-in is not enabled in your Firebase console. Please enable it in Authentication > Sign-in method.");
+      } else {
+        setError(error.message || "An error occurred during authentication.");
+      }
     } finally {
       setLoading(false);
     }
@@ -113,6 +121,14 @@ export default function AuthModal() {
                 <button className="w-full py-4 bg-coffee-beige text-coffee-dark rounded-2xl uppercase tracking-widest font-medium text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all">
                   {mode === "login" ? "Sign In" : "Get Started"}
                 </button>
+
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                    <p className="text-[10px] text-red-400 leading-relaxed uppercase tracking-widest text-center italic">
+                      {error}
+                    </p>
+                  </div>
+                )}
 
                 <div className="relative py-4 flex items-center gap-4">
                    <div className="flex-1 h-[1px] bg-white/5" />

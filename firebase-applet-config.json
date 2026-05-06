@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0830250982",
-  "appId": "1:967653209970:web:84739c0aaa5141d32c8feb",
-  "apiKey": "AIzaSyD--Fko6MkSMKHxfq9a67yeCk3ZV9f_pn0",
-  "authDomain": "gen-lang-client-0830250982.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-a1642720-1485-4497-a3cc-48ce1f1882cc",
-  "storageBucket": "gen-lang-client-0830250982.firebasestorage.app",
-  "messagingSenderId": "967653209970",
-  "measurementId": ""
+  "apiKey": "AIzaSyCgkHp8onp3BDz093iOEc3CNvvf6zkZpl4",
+  "authDomain": "aether-cafe.firebaseapp.com",
+  "projectId": "aether-cafe",
+  "storageBucket": "aether-cafe.firebasestorage.app",
+  "messagingSenderId": "97878176606",
+  "appId": "1:97878176606:web:e7d28947320ac65a03d5cf",
+  "measurementId": "G-9ZLHF0JHSQ",
+  "firestoreDatabaseId": "(default)"
 }
