@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // -------------------------------------------------------------------------
+    // HELPER FUNCTIONS
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -------------------------------------------------------------------------
+    // VALIDATION BLUEPRINTS
+    // -------------------------------------------------------------------------
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.displayName is string && data.displayName.size() <= 128 &&
+             data.role in ['customer', 'staff', 'admin'] &&
+             data.loyaltyPoints is number &&
+             data.favoriteDrinks is list &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidReservation(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.type in ['table', 'workspace', 'event'] &&
+             data.guests is number &&
+             data.date is string && data.date.size() <= 20 &&
+             data.time is string && data.time.size() <= 20 &&
+             data.zone is string && data.zone.size() <= 50 &&
+             data.customerName is string && data.customerName.size() <= 128 &&
+             data.customerEmail is string && data.customerEmail.size() <= 256 &&
+             data.requirements is string && data.requirements.size() <= 1000 &&
+             data.status in ['confirmed', 'checked-in', 'completed', 'cancelled'] &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidOrder(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.items is list &&
+             data.total is number &&
+             data.status in ['pending', 'preparing', 'ready', 'completed', 'cancelled'] &&
+             data.userId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // RULES
+    // -------------------------------------------------------------------------
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Test Connection
+    match /test/{testId} {
+      allow read: if isSignedIn();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isVerified() && isValidId(userId) && isValidUser(incoming()) && 
+                    incoming().createdAt == request.time &&
+                    incoming().keys().hasAll(['uid', 'email', 'displayName', 'role', 'loyaltyPoints', 'favoriteDrinks', 'createdAt']) &&
+                    incoming().keys().size() == 7;
+      allow update: if isVerified() && isOwner(userId) && isValidUser(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'favoriteDrinks', 'loyaltyPoints']);
+    }
+
+    // Menu
+    match /menu/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow create: if isVerified() && isValidId(orderId) == false && isValidOrder(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin() || (isVerified() && isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['status']) && incoming().status == 'cancelled');
+      allow delete: if isAdmin();
+    }
+
+    // Reservations
+    match /reservations/{resId} {
+      allow create: if isVerified() && isValidReservation(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin() || (isVerified() && isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['status']) && incoming().status == 'cancelled');
+      allow delete: if isAdmin();
+    }
+
+    // Status
+    match /status/live {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

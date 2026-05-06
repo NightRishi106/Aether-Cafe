@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with loyalty and favorites",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "staff", "admin"] },
+        "loyaltyPoints": { "type": "number" },
+        "favoriteDrinks": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "A drink or food item in the cafe menu",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string", "enum": ["Coffee", "Espresso", "Cold Brew", "Desserts", "Bakery", "Signature Drinks"] },
+        "image": { "type": "string" },
+        "ingredients": { "type": "array" },
+        "calories": { "type": "number" },
+        "available": { "type": "boolean" },
+        "tags": { "type": "array" }
+      },
+      "required": ["name", "price", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "preparing", "ready", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "total", "status"]
+    },
+    "Reservation": {
+      "title": "Reservation",
+      "description": "Table or workspace reservation",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["table", "workspace", "event"] },
+        "guests": { "type": "number" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "zone": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "requirements": { "type": "string" },
+        "status": { "type": "string", "enum": ["confirmed", "checked-in", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "date", "time", "status", "createdAt"]
+    },
+    "Test": {
+      "title": "Connection Test",
+      "description": "Used for verifying Firestore connectivity",
+      "type": "object",
+      "properties": {
+        "connection": { "type": "string" }
+      }
+    },
+    "Status": {
+      "title": "Cafe Status",
+      "description": "Real-time cafe metrics",
+      "type": "object",
+      "properties": {
+        "occupancy": { "type": "number" },
+        "capacity": { "type": "number" },
+        "liveWaitTime": { "type": "number" },
+        "activeEvent": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/menu": {
+      "schema": "MenuItem",
+      "description": "Cafe menu items"
+    },
+    "/orders": {
+      "schema": "Order",
+      "description": "Customer orders"
+    },
+    "/reservations": {
+      "schema": "Reservation",
+      "description": "Table and workspace reservations"
+    },
+    "/status/live": {
+      "schema": "Status",
+      "description": "Current cafe status"
+    },
+    "/test/{testId}": {
+      "schema": "Test",
+      "description": "Connection test collection"
+    }
+  }
+}
